@@ -166,7 +166,9 @@ class Book(Base):
     title: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     publication_year: Mapped[Date] = mapped_column(Date, nullable=False)
     category: Mapped[BookCategory] = mapped_column(BookCategoryEnum, nullable=False)
-    author_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("author.id"))
+    author_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("authors.author_id")
+    )
     author: Mapped["Author"] = relationship(back_populates="books")
     readers: Mapped[list["Reader"]] = relationship(
         "Reader", secondary=book_readers, back_populates="books"

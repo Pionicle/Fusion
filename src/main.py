@@ -1,11 +1,28 @@
-# Import FastAPI to create a web application
-from fastapi import FastAPI
+"""
+Основной модуль приложения FastAPI.
+"""
 
-# Initialize a new FastAPI application instance
+import uvicorn
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from src.routes.routes_api import router
+
+# Экземпляр приложения
 app = FastAPI()
 
 
-# Define a GET endpoint at the root path ("/") that returns a JSON message
-@app.get("/")
-def read_root():
-    return {"message": "Hello world!"}
+# Подключение путей для api
+app.include_router(router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"],
+    allow_headers=["*"],
+)
+
+# Запуск приложения
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
