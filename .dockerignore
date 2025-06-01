@@ -1,0 +1,8 @@
+__pycache__
+
+venv
+pgdata
+script.sql
+
+.vscode
+.env

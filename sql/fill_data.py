@@ -1,0 +1,114 @@
+import psycopg2
+from psycopg2 import Error
+import logging
+
+# Настройка логирования
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+# Параметры подключения к базе данных
+db_params = {
+    "dbname": "postgres",
+    "user": "postgres",
+    "password": "postgres",
+    "host": "localhost",
+    "port": "5434",
+}
+
+# Список таблиц и соответствующих CSV-файлов с колонками
+tables = [
+    {
+        "table_name": "authors",
+        "csv_file": "authors.csv",
+        "columns": ("author_id", "first_name", "last_name", "nationality"),
+    },
+    {
+        "table_name": "books",
+        "csv_file": "books.csv",
+        "columns": ("book_id", "title", "publication_year", "category", "author_id"),
+    },
+    {
+        "table_name": "readers",
+        "csv_file": "readers.csv",
+        "columns": ("reader_id", "first_name", "last_name", "email"),
+    },
+    {
+        "table_name": "book_readers",
+        "csv_file": "book_readers.csv",
+        "columns": ("book_id", "reader_id"),
+    },
+]
+
+
+def check_table_exists(cursor, table_name):
+    """Проверка существования таблицы в базе данных."""
+    cursor.execute(
+        """
+        SELECT EXISTS (
+            SELECT FROM information_schema.tables 
+            WHERE table_name = %s
+        );
+    """,
+        (table_name,),
+    )
+    return cursor.fetchone()[0]
+
+
+def import_csv_to_table(cursor, table_name, csv_file, columns):
+    """Импорт данных из CSV в указанную таблицу, пустые строки интерпретируются как NULL."""
+    try:
+        with open(csv_file, "r", encoding="utf-8") as f:
+            next(f)  # Пропускаем заголовок
+            cursor.copy_from(f, table_name, sep=",", columns=columns, null="")
+        logger.info(f"Successfully imported data from {csv_file} into {table_name}")
+    except FileNotFoundError:
+        logger.error(f"File {csv_file} not found")
+        raise
+    except Exception as e:
+        logger.error(f"Error importing {csv_file} into {table_name}: {str(e)}")
+        raise
+
+
+def main():
+    # Подключение к базе данных
+    conn = None
+    cur = None
+    try:
+        logger.info("Connecting to the database...")
+        conn = psycopg2.connect(**db_params)
+        cur = conn.cursor()
+
+        # Импорт данных для каждой таблицы
+        for table in tables:
+            table_name = table["table_name"]
+            csv_file = table["csv_file"]
+            columns = table["columns"]
+
+            # Проверка существования таблицы
+            if not check_table_exists(cur, table_name):
+                logger.error(f"Table {table_name} does not exist in the database")
+                raise Exception(f"Table {table_name} does not exist")
+
+            logger.info(f"Importing data into {table_name} from {csv_file}...")
+            import_csv_to_table(cur, table_name, csv_file, columns)
+
+        # Подтверждение транзакции
+        conn.commit()
+        logger.info("All data imported successfully")
+
+    except (Exception, Error) as error:
+        logger.error(f"Database error: {str(error)}")
+        if conn:
+            conn.rollback()
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+            logger.info("Database connection closed")
+
+
+if __name__ == "__main__":
+    main()
