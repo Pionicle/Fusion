@@ -32,3 +32,23 @@ def handle_no_result_found(func: Callable[..., T]) -> Callable[..., T]:
             raise HTTPException(status_code=404, detail="Объект не найден.")
 
     return wrapper
+
+
+def handle_integrity_error(func: Callable[..., T]) -> Callable[..., T]:
+    """
+    Декоратор для обработки ситуации запрещенной операции.
+
+    Raises:
+        HTTPException: В случае запрещенной операции.
+    Returns:
+        Callable[..., T]: _description_
+    """
+
+    @wraps(func)
+    async def wrapper(*args: Any, **kwargs: Any) -> T:
+        try:
+            return await func(*args, **kwargs)
+        except sqlalchemy.exc.IntegrityError:
+            raise HTTPException(status_code=409, detail="Запрещена операция.")
+
+    return wrapper
