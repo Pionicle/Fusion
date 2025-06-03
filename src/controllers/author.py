@@ -11,7 +11,6 @@ from src.schemas.author import (
     AuthorCreate,
     AuthorUpdate,
     PaginatedAuthorsResponse,
-    DeleteAuthorResponse,
 )
 
 
@@ -43,6 +42,6 @@ class AuthorController(BaseController):
         return await self.model.update_object(author_id, values)
 
     @handle_no_result_found
-    async def delete_object(self, author_id: int) -> DeleteAuthorResponse:
+    async def delete_object(self, author_id: int) -> Author:
         """Удаляет автора по ID."""
         return await self.model.delete_object(author_id)

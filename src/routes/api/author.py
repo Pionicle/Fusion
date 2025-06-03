@@ -18,7 +18,6 @@ from src.schemas.author import (
     PaginatedAuthorsResponse,
     AuthorResponse,
     AuthorUpdate,
-    DeleteAuthorResponse,
 )
 
 # Роутер для работы с авторами
@@ -65,7 +64,7 @@ async def update_author(
     return await controller.update_object(author_id, author)
 
 
-@router.delete("/{author_id}", response_model=DeleteAuthorResponse)
+@router.delete("/{author_id}", response_model=AuthorResponse)
 async def delete_author(
     author_id: int,
     controller: Annotated[AuthorController, Depends(author_controller)],
