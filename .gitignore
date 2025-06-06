@@ -4,5 +4,4 @@ venv
 pgdata
 
 .vscode
-.env
 .continue
