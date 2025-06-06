@@ -9,10 +9,16 @@
 - (DELETE /{author_id}) Удаление автора
 """
 
+import json
 from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 
-from src.routes.depens import author_controller, AuthorController
+from src.routes.depens import (
+    author_controller,
+    redis_client,
+    AuthorController,
+    RedisClient,
+)
 from src.schemas.author import (
     AuthorCreate,
     PaginatedAuthorsResponse,
@@ -26,8 +32,8 @@ router = APIRouter()
 
 @router.post("/create", response_model=AuthorResponse)
 async def create_author(
-    author: AuthorCreate,
     controller: Annotated[AuthorController, Depends(author_controller)],
+    author: AuthorCreate,
 ):
     """Создание нового автора."""
     return await controller.create_object(author)
@@ -35,6 +41,7 @@ async def create_author(
 
 @router.get("", response_model=PaginatedAuthorsResponse)
 async def get_authors(
+    redis_client: Annotated[RedisClient, Depends(redis_client)],
     controller: Annotated[AuthorController, Depends(author_controller)],
     page: int = Query(1, ge=1, description="Номер страницы, начиная с 1"),
     limit: int = Query(
@@ -42,23 +49,44 @@ async def get_authors(
     ),
 ):
     """Получает список авторов с пагинацией."""
-    return await controller.read_objects(page, limit)
+    cache_key = f"authors:page:{page}:limit:{limit}"
+    cache_value = await redis_client.get(cache_key)
+    if cache_value:
+        return json.loads(cache_value)
+
+    authors = await controller.read_objects(page, limit)
+
+    await redis_client.set(cache_key, authors.model_dump_json())
+    await redis_client.expire(cache_key, 15)
+
+    return authors
 
 
 @router.get("/{author_id}", response_model=AuthorResponse)
 async def get_author(
-    author_id: int,
+    redis_client: Annotated[RedisClient, Depends(redis_client)],
     controller: Annotated[AuthorController, Depends(author_controller)],
+    author_id: int,
 ):
     """Получает автора по ID."""
-    return await controller.read_object(author_id)
+    cache_key = f"author:{author_id}"
+    cache_value = await redis_client.get(cache_key)
+    if cache_value:
+        return json.loads(cache_value)
+
+    author = await controller.read_object(author_id)
+
+    await redis_client.set(cache_key, author.model_dump_json())
+    await redis_client.expire(cache_key, 15)
+
+    return author
 
 
 @router.put("/{author_id}", response_model=AuthorResponse)
 async def update_author(
-    author_id: int,
-    author: AuthorUpdate,
     controller: Annotated[AuthorController, Depends(author_controller)],
+    author: AuthorUpdate,
+    author_id: int,
 ):
     """Обновляет данные автора."""
     return await controller.update_object(author_id, author)
@@ -66,8 +94,8 @@ async def update_author(
 
 @router.delete("/{author_id}", response_model=AuthorResponse)
 async def delete_author(
-    author_id: int,
     controller: Annotated[AuthorController, Depends(author_controller)],
+    author_id: int,
 ):
     """Удаляет автора."""
     return await controller.delete_object(author_id)
