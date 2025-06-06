@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     DB_PASS: str
     DB_NAME: str
 
+    REDIS_HOST: str
+    REDIS_PORT: int
+
     @property
     def database_url(self):
         """
@@ -29,3 +32,6 @@ class Settings(BaseSettings):
 settings = Settings()
 
 DATABASE_URL = settings.database_url
+
+REDIS_HOST = settings.REDIS_HOST
+REDIS_PORT = settings.REDIS_PORT
