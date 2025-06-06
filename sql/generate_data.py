@@ -11,10 +11,10 @@ NATIONALITIES = ["Russian", "American", "British", "French", "German"]
 BOOK_CATEGORIES = ["Fiction", "Non-fiction", "Science", "History", "Fantasy"]
 
 # Количество записей для генерации
-NUM_AUTHORS = 100
-NUM_BOOKS = 1000
-NUM_READERS = 5000
-NUM_BOOK_READERS = 10000
+NUM_AUTHORS = 50
+NUM_BOOKS = 100
+NUM_READERS = 100
+NUM_BOOK_READERS = 300
 
 # Генерация данных для таблицы authors
 authors = []
