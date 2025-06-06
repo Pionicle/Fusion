@@ -11,6 +11,7 @@ from src.schemas.author import (
     AuthorCreate,
     AuthorUpdate,
     PaginatedAuthorsResponse,
+    AuthorResponse,
 )
 
 
@@ -27,9 +28,9 @@ class AuthorController(BaseController):
         return await self.model.create_object(values)
 
     @handle_no_result_found
-    async def read_object(self, author_id: int) -> Author:
+    async def read_object(self, author_id: int) -> AuthorResponse:
         """Получает автора по ID."""
-        return await self.model.read_object(author_id)
+        return AuthorResponse.model_validate(await self.model.read_object(author_id))
 
     async def read_objects(self, page: int, limit: int) -> PaginatedAuthorsResponse:
         """Получает список авторов с пагинацией."""

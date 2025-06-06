@@ -14,6 +14,7 @@ from src.schemas.reader import (
     ReaderCreate,
     ReaderUpdate,
     PaginatedReadersResponse,
+    ReaderResponse,
 )
 
 
@@ -32,9 +33,9 @@ class ReaderController(BaseController):
 
     @handle_integrity_error
     @handle_no_result_found
-    async def read_object(self, reader_id: int) -> Reader:
+    async def read_object(self, reader_id: int) -> ReaderResponse:
         """Получает читателя по ID."""
-        return await self.model.read_object(reader_id)
+        return ReaderResponse.model_validate(await self.model.read_object(reader_id))
 
     async def read_objects(self, page: int, limit: int) -> PaginatedReadersResponse:
         """Получает список читателей с пагинацией."""

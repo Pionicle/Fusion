@@ -11,6 +11,7 @@ from src.schemas.book import (
     BookCreate,
     BookUpdate,
     PaginatedBooksResponse,
+    BookResponse,
 )
 
 
@@ -29,9 +30,9 @@ class BookController(BaseController):
 
     @handle_integrity_error
     @handle_no_result_found
-    async def read_object(self, book_id: int) -> Book:
+    async def read_object(self, book_id: int) -> BookResponse:
         """Получает книгу по ID."""
-        return await self.model.read_object(book_id)
+        return BookResponse.model_validate(await self.model.read_object(book_id))
 
     async def read_objects(self, page: int, limit: int) -> PaginatedBooksResponse:
         """Получает список книг с пагинацией."""

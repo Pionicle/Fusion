@@ -34,6 +34,6 @@ class BaseController(ABC):
         pass
 
     @abstractmethod
-    async def delete_object(self, id: int) -> bool:
+    async def delete_object(self, id: int) -> Any:
         """Удаляет запись по ID."""
         pass
